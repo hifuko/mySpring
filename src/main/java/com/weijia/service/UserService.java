@@ -4,6 +4,6 @@ import com.weijia.spring.Component;
 import com.weijia.spring.Scope;
 
 @Component("userService") //bean name
-@Scope("prototype")
+//@Scope("prototype")
 public class UserService {
 }

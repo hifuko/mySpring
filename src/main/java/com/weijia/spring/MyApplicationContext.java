@@ -1,6 +1,7 @@
 package com.weijia.spring;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,7 +82,19 @@ public class MyApplicationContext {
     }
 
     private Object createBean(String beanName, BeanDefinition beanDefinition){
-        return null;
+        Object instance = null;
+        try {
+            instance = beanDefinition.getType().getConstructor().newInstance();
+        } catch (InstantiationException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+        return instance;
     }
 
     //if bean is singleton, take it from the singleton pool
