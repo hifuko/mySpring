@@ -1,17 +1,31 @@
 package com.weijia.service;
 
-import com.weijia.spring.Autowired;
-import com.weijia.spring.Component;
-import com.weijia.spring.Scope;
+import com.weijia.spring.*;
 
 @Component("userService") //bean name
 //@Scope("prototype")
-public class UserService {
+public class UserService implements BeanNameAware, InitializingBean {
 
     @Autowired
     private OrderService orderService;
+    private String beanName;
+    private String attributeX;
 
     public void test(){
         System.out.println(orderService);
+    }
+
+    @Override
+    public void setBeanName(String beanName) {
+        this.beanName = beanName;
+    }
+
+    public void calculateAttributeX(){
+
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        System.out.println("Initializing method....");
     }
 }

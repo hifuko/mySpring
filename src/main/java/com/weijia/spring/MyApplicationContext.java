@@ -5,7 +5,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.util.Objects;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MyApplicationContext {
@@ -14,6 +14,8 @@ public class MyApplicationContext {
     private ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
     //singleton bean pool
     private ConcurrentHashMap<String, Object> singletonObjectMap = new ConcurrentHashMap<>();
+
+    private ArrayList<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
 
     //1. find the directory path to scan (value of @ComponentScan of configClass)
     //2. parse the path to get all files under the directory
@@ -51,9 +53,13 @@ public class MyApplicationContext {
                         //create BeanDefinition and put the bean into the map
                         try {
                             Class<?> clazz = classLoader.loadClass(className);
-
+                            //is a bean
                             if (clazz.isAnnotationPresent(Component.class)){
-                                //is a bean
+                                //check if clazz implements BeanPostProcessor
+                                if (BeanPostProcessor.class.isAssignableFrom(clazz)){
+                                    BeanPostProcessor instance = (BeanPostProcessor) clazz.newInstance();
+                                    beanPostProcessorList.add(instance);
+                                }
                                 String beanName = clazz.getAnnotation(Component.class).value();
                                 //if no bean name is given in annotation
                                 if (beanName.equals("")){
@@ -66,7 +72,6 @@ public class MyApplicationContext {
 
                                 if (clazz.isAnnotationPresent(Scope.class)) {
                                     //singleton or prototype
-
                                     beanDefinition.setScope(clazz.getAnnotation(Scope.class).value());
                                 } else {
                                     //no value(default): singleton
@@ -75,6 +80,10 @@ public class MyApplicationContext {
                                 beanDefinitionMap.put(beanName, beanDefinition);
                             }
                         } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e);
+                        } catch (InstantiationException e) {
+                            throw new RuntimeException(e);
+                        } catch (IllegalAccessException e) {
                             throw new RuntimeException(e);
                         }
                     }
@@ -103,12 +112,32 @@ public class MyApplicationContext {
             //check if the bean is declared as a field with @Autowired
             for (Field field: instance.getClass().getDeclaredFields()){
                 if (field.isAnnotationPresent(Autowired.class)){
-                    //can be assigned value
-                    field.setAccessible(true);
+                    field.setAccessible(true); //so that the bean can be assigned value
                     //set the object as the field: use the field name to find the bean object in map
                     field.set(instance, getBean(field.getName()));
                 }
             }
+            //BeanNameAware call back
+            if (instance instanceof BeanNameAware){
+                ((BeanNameAware) instance).setBeanName(beanName);
+            }
+
+            //AOP - before initializing bean
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                beanPostProcessor.postProcessBeforeInitialization(beanName, instance);
+            }
+
+            //initialize bean
+            if (instance instanceof InitializingBean){
+                ((InitializingBean) instance).afterPropertiesSet();
+            }
+
+            //AOP - after initializing bean
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                beanPostProcessor.postProcessAfterInitialization(beanName, instance);
+            }
+
+
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
