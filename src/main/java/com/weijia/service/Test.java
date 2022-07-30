@@ -7,10 +7,12 @@ public class Test {
         MyApplicationContext applicationContext = new MyApplicationContext(AppConfig.class);
         UserService userService = (UserService) applicationContext.getBean("userService");
         //check if they are the same bean (singleton/prototype)
-        System.out.println(applicationContext.getBean("userService"));
-        System.out.println(applicationContext.getBean("userService"));
-        System.out.println(applicationContext.getBean("userService"));
-        System.out.println(applicationContext.getBean("userService"));
+//        System.out.println(applicationContext.getBean("userService"));//beanName must be matched with value of @Component
+//        System.out.println(applicationContext.getBean("userService"));
+//        System.out.println(applicationContext.getBean("userService"));
+//        System.out.println(applicationContext.getBean("orderService"));
+
+        userService.test();
 
     }
 

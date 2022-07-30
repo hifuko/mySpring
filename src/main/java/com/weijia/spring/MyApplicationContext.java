@@ -1,6 +1,8 @@
 package com.weijia.spring;
 
+import java.beans.Introspector;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.Objects;
@@ -49,13 +51,22 @@ public class MyApplicationContext {
                         //create BeanDefinition and put the bean into the map
                         try {
                             Class<?> clazz = classLoader.loadClass(className);
-                            BeanDefinition beanDefinition = new BeanDefinition();
-                            beanDefinition.setType(clazz);
+
                             if (clazz.isAnnotationPresent(Component.class)){
                                 //is a bean
                                 String beanName = clazz.getAnnotation(Component.class).value();
+                                //if no bean name is given in annotation
+                                if (beanName.equals("")){
+                                    //create a name for the bean
+                                    beanName = Introspector.decapitalize(clazz.getSimpleName());
+                                }
+
+                                BeanDefinition beanDefinition = new BeanDefinition();
+                                beanDefinition.setType(clazz);
+
                                 if (clazz.isAnnotationPresent(Scope.class)) {
                                     //singleton or prototype
+
                                     beanDefinition.setScope(clazz.getAnnotation(Scope.class).value());
                                 } else {
                                     //no value(default): singleton
@@ -81,10 +92,23 @@ public class MyApplicationContext {
         }
     }
 
+    //1. instantiate beans
+    //2. dependency injection
     private Object createBean(String beanName, BeanDefinition beanDefinition){
         Object instance = null;
         try {
             instance = beanDefinition.getType().getConstructor().newInstance();
+
+            //dependency injection
+            //check if the bean is declared as a field with @Autowired
+            for (Field field: instance.getClass().getDeclaredFields()){
+                if (field.isAnnotationPresent(Autowired.class)){
+                    //can be assigned value
+                    field.setAccessible(true);
+                    //set the object as the field: use the field name to find the bean object in map
+                    field.set(instance, getBean(field.getName()));
+                }
+            }
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
