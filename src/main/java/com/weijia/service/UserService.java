@@ -4,7 +4,7 @@ import com.weijia.spring.*;
 
 @Component("userService") //bean name
 //@Scope("prototype")
-public class UserService implements BeanNameAware, InitializingBean {
+public class UserService implements BeanNameAware, InitializingBean, UserInterface {
 
     @Autowired
     private OrderService orderService;

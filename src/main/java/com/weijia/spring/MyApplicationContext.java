@@ -37,7 +37,7 @@ public class MyApplicationContext {
                 File[] files = file.listFiles();
                 for (File f : files) {
                     String fileName = f.getAbsolutePath();
-                    System.out.println(fileName);
+                    //System.out.println(fileName);
                     ///home/ivana/IdeaProjects/MySpring/MySpring/target/classes/com/weijia/service/UserService.class
                     ///home/ivana/IdeaProjects/MySpring/MySpring/target/classes/com/weijia/service/AppConfig.class
                     ///home/ivana/IdeaProjects/MySpring/MySpring/target/classes/com/weijia/service/Test.class
@@ -45,7 +45,7 @@ public class MyApplicationContext {
                         //check it the file is a bean
                         String className = fileName.substring(fileName.indexOf("com"), fileName.indexOf(".class"))//com/weijia/service/UserService
                                 .replace("/", ".");//com.weijia.service.UserService
-                        System.out.println(className);
+                        //System.out.println(className);
                         //com.weijia.service.UserService
                         //com.weijia.service.AppConfig
                         //com.weijia.service.Test
@@ -124,7 +124,7 @@ public class MyApplicationContext {
 
             //AOP - before initializing bean
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
-                beanPostProcessor.postProcessBeforeInitialization(beanName, instance);
+                instance = beanPostProcessor.postProcessBeforeInitialization(beanName, instance);
             }
 
             //initialize bean
@@ -134,7 +134,8 @@ public class MyApplicationContext {
 
             //AOP - after initializing bean
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
-                beanPostProcessor.postProcessAfterInitialization(beanName, instance);
+                instance = beanPostProcessor.postProcessAfterInitialization(beanName, instance);
+                instance.hashCode();//test
             }
 
 
