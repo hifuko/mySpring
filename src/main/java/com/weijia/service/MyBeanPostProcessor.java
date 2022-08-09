@@ -34,7 +34,7 @@ public class MyBeanPostProcessor implements BeanPostProcessor {
                     new InvocationHandler() {
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            System.out.printf("[DEBUG] \tMethod: %s", method.getName());
+                            System.out.printf("[DEBUG] \tMethod: %s\n", method.getName());
                             return method.invoke(bean, args);
                         }
                     });

@@ -1,9 +1,11 @@
 package com.weijia.spring;
 
+import javax.annotation.PostConstruct;
 import java.beans.Introspector;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
@@ -117,12 +119,18 @@ public class MyApplicationContext {
                     field.set(instance, getBean(field.getName()));
                 }
             }
+
+            for (Method method : instance.getClass().getDeclaredMethods()) {
+                if (method.isAnnotationPresent(PostConstruct.class)){
+                    method.invoke(instance);
+                }
+            }
             //BeanNameAware call back
             if (instance instanceof BeanNameAware){
                 ((BeanNameAware) instance).setBeanName(beanName);
             }
 
-            //AOP - before initializing bean
+            //before initializing bean
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
                 instance = beanPostProcessor.postProcessBeforeInitialization(beanName, instance);
             }
@@ -132,7 +140,7 @@ public class MyApplicationContext {
                 ((InitializingBean) instance).afterPropertiesSet();
             }
 
-            //AOP - after initializing bean
+            //AOP (proxy) - after initializing bean
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
                 instance = beanPostProcessor.postProcessAfterInitialization(beanName, instance);
                 instance.hashCode();//test
